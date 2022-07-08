@@ -1,1 +1,1 @@
-# 'Craft Sysytem for QBCore by @Cruso#5044'
+# 'Craft System for QBCore by @Cruso#5044'
