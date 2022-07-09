@@ -93,17 +93,17 @@ body {
     display: flex;
     align-items: center;
     align-content: center;
-    background-color: rgb(3, 53, 95);
+    background-color: rgba(13, 13, 14, 0.6);
     width: 35%;
     border: 1px solid;
-    border-radius: 25px;
+    border-radius: 20px;
     margin: 5px;
     transition: all 0.35s ease-in-out;
     
 }
 
 .navi-flex:hover {
-    background-color: rgba(3, 53, 95, 0.8);
+    background-color: rgba(13, 13, 14, 0.8);
     width: 40%;
     /*transform: translate(10px, 10px);*/
     
@@ -131,7 +131,7 @@ body {
     font-size: 12px;
     border: 1px solid;
     border-radius: 10px;
-    background-color: rgba(3, 53, 95, 0.9);
+    background-color: rgba(13, 13, 14, 0.6);
     margin: 5px;
     padding: 5px;
     text-align: center;
@@ -139,11 +139,11 @@ body {
 }
 
 .content {
-    position: relative;
+    position: absolute;
     border: 1px solid;
-    border-radius: 15px;
-    background-color: rgba(3, 53, 95, 0.9);
-    top: -55px;
+    border-radius: 10px;
+    background-color: rgba(13, 13, 14, 0.6);
+    top:  10px;
     left: 55%;
     max-width: 50%;
     min-height: 220px;

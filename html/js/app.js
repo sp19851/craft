@@ -46,7 +46,13 @@ const App = {
                 this.subnavishow = false  
                 this.navishow = true
                 this.itemshow = false
-            }
+            } else {
+                this.subnavishow = false  
+                this.navishow = false
+                this.itemshow = false
+                this.show = false;
+                $.post('https://craft/close');
+            }    
 
         },
         onNavi(item) {
@@ -91,15 +97,19 @@ const App = {
         Start() {
             let bool = true
             for (let i = 0; i < this.currentItems.length; i += 1) {
-                let Item = this.currentItems
+                let Item = this.currentItems[i]
+                //console.log(JSON.stringify(Item))
                 if (!Item.in_stock) {
                         bool = false
                         break
                 }
             }
+         
             if (bool) {
-                $.post('https://craft/use', JSON.stringify({currentCraft:itemForCraft}));
+                $.post('https://craft/craft', JSON.stringify({currentCraft:this.itemForCraft, items:this.currentItems, time: this.itemForCraft_time, amount:this.itemForCraft_amount}));
+                //this.onClose()
             } else {
+                
                 $.post('https://craft/not_in_stock');
             }
         }
@@ -116,13 +126,12 @@ const App = {
     
             } else if(event.data.action === 'close') {
                 this.onClose()
-            } else if(event.data.action === 'onNotif') {
-                this.onNotif()
-            } else if(event.data.action === 'offNotif') {
-                this.offNotif()
             } else if(event.data.action === 'refresh') {
-              
-
+                this.navi = event.data.categories
+                this.array_subnavi = event.data.subcategories
+                this.itemshow = false
+                this.subnavishow = false  
+                this.navishow = true
             }
             
         });

@@ -12,6 +12,36 @@ Keys = {
 local QBCore = exports['qb-core']:GetCoreObject()
 local inUSe = false
 local inUIPage = false
+local currentTable = nil
+local isNotif = false
+
+
+local function showNotif(text, coords, dist)
+    --print('showNotif', isNotif, text, coords, dist)
+    if not isNotif  then 
+        exports['qb-core']:DrawText(text, 'left')
+        isNotif = true
+        --print('----')
+        Citizen.CreateThread(function()
+            while isNotif do
+                local pos = GetEntityCoords(PlayerPedId())
+                local distToPed = #(pos-vector3(coords.x, coords.y, coords.z))
+                    --print(distToPed, dist)
+                    if distToPed > dist then
+                        isNotif = false
+                        exports['qb-core']:HideText()
+                    end
+                Citizen.Wait(100)
+            end
+        end)
+    
+    end
+end
+
+local function hideNotif()
+    isNotif = false
+    exports['qb-core']:HideText()
+end
 
 local function createBlip(data)
 --    function blipCreate(coords, sprite, color, label)
@@ -27,94 +57,103 @@ local function createBlip(data)
     EndTextCommandSetBlipName(blip)
 end
 
-local function openCraft(data)
-    if not inUIPage then
-        local player = QBCore.Functions.GetPlayerData()
-        local xp = player.metadata['craftingrep']
-        --subcategories--
-        local subcategories = {}
-        for index, value in pairs(Config.Items) do
-            local parent = Config.Categories[index].name
-            --print('parent', parent)
-            
-                       
-          
-            
-            --print('Config.Items[index]', index, json.encode(Config.Items[index]))
-            local array = {}
-            for k, j in pairs(Config.Items[index]) do
-                for _, item in pairs(data.items) do
-                    if item == k then
-                    --items--
-                        local Items = {}
-                        
-                        for i, v in pairs(j.items) do
-                            local isItem = false
-                            for _, l in ipairs(player.items) do
-                                --print('i', i, l.name, j.items[i], l.amount)
-                                if l.name == i then
-                                    if l.amount >= j.items[i] then
-                                        isItem = true
-                                        break
-                                    end
+local function GetDataForCraft(data)
+    local player = QBCore.Functions.GetPlayerData()
+    local xp = player.metadata['craftingrep']
+    --subcategories--
+    local subcategories = {}
+    --print('data', json.encode(data))
+    for index, value in pairs(Config.Items) do
+        --print('37', index, json.encode(value))
+        local parent = Config.Categories[index].name
+        --print('parent', parent)
+        
+                   
+      
+        
+        --print('Config.Items[index]', index, json.encode(Config.Items[index]))
+        local array = {}
+        for k, j in pairs(Config.Items[index]) do
+            for _, item in pairs(data.items) do
+                --print('49', item,  k)
+                if item == k then
+                    --print('add', item,  k)
+                --items--
+                    local Items = {}
+                    
+                    for i, v in pairs(j.items) do
+                        local isItem = false
+                        for _, l in ipairs(player.items) do
+                            --print('i', i, l.name, j.items[i], l.amount)
+                            if l.name == i then
+                                if l.amount >= j.items[i] then
+                                    isItem = true
+                                    break
                                 end
                             end
-                            Items[#Items+1] = {
-                                id = #Items+1,
-                                name = i,
-                                label = QBCore.Shared.Items[i].label,
-                                image = "./img/"..i..".png",
-                                amount = j.items[i],
-                                in_stock = isItem
-                            }
                         end
-                        print('math.ceil(xp/100)', xp,xp/100, math.ceil(xp/100))
-                        if math.ceil(xp/100)>=j.level then
-                            array[#array+1] = {
-                                id = #array+1,
-                                name = j.name,
-                                label = QBCore.Shared.Items[j.name].label,
-                                image = "./img/"..j.name..".png",
-                                amount = j.amount,
-                                level = j.level,
-                                time = j.time,
-                                items = Items
-                            }
-                        end
-
+                        Items[#Items+1] = {
+                            id = #Items+1,
+                            name = i,
+                            label = QBCore.Shared.Items[i].label,
+                            image = "./img/"..i..".png",
+                            amount = j.items[i],
+                            in_stock = isItem
+                        }
+                    end
+                   -- print('math.ceil(xp/100)', xp,xp/100, math.ceil(xp/100))
+                    if math.ceil(xp/100)>=j.level then
+                        array[#array+1] = {
+                            id = #array+1,
+                            name = j.name,
+                            label = QBCore.Shared.Items[j.name].label,
+                            image = "./img/"..j.name..".png",
+                            amount = j.amount,
+                            level = j.level,
+                            time = j.time,
+                            items = Items
+                        }
                     end
                 end
-                
-                
             end
-           
-            --print('value2', index, Config.Categories[index].name)
+            
+            
+        end
+       
+        --print('value2', index, Config.Categories[index].name)
+        if #array > 0 then
             subcategories[#subcategories+1] = {
                 id = #subcategories+1,
                 parent = parent,
                 array = array
             }
         end
-      
-         --categories--
-         local categories = {}
+    end
+  
+     --categories--
+     local categories = {}
 
-        for index, value in pairs(subcategories) do
-            for i, v in pairs(Config.Categories) do
-                if v.name == value.parent then
-                    categories[#categories+1] = {
-                        id = #categories+1,
-                        name = v.name,
-                        label = v.label,
-                        image = "./img/categ/"..v.name..".png" 
-                    }
-                    break
-                end
+    for index, value in pairs(subcategories) do
+        for i, v in pairs(Config.Categories) do
+            if v.name == value.parent then
+                categories[#categories+1] = {
+                    id = #categories+1,
+                    name = v.name,
+                    label = v.label,
+                    image = "./img/categ/"..v.name..".png" 
+                }
+                break
             end
         end
+    end
+    return categories, subcategories
+end
 
-         
 
+local function openCraft()
+    if not inUIPage then
+        local categories, subcategories = GetDataForCraft(currentTable)
+        --print('subcategories', json.encode(subcategories))
         SendNUIMessage({
             action = "openCraft",
             categories = categories,
@@ -123,10 +162,19 @@ local function openCraft(data)
         })
         SetNuiFocus(true, true)
         inUIPage = true
-        --print(json.encode(categories))
+       
         TriggerServerEvent('craft:server:savejson', subcategories)
       
     end
+end
+
+local function refreshCraft()
+    local categories, subcategories = GetDataForCraft(currentTable)
+    SendNUIMessage({
+        action = "refresh",
+        categories = categories,
+        subcategories = subcategories
+    })
 end
 
 RegisterNUICallback('close', function()
@@ -138,6 +186,44 @@ RegisterNUICallback('not_in_stock', function()
     QBCore.Functions.Notify('У тебя нет необходимых ингридиентов или их не хватает', 'error', 7500)
 end)
 
+RegisterNUICallback('craft', function(data)
+    --print('use', json.encode(data))
+    local need = {}
+    for index, value in pairs(data.items) do
+        need[#need+1] = {
+            name = value.name,
+            amount = value.amount
+        }
+    end
+    TriggerServerEvent('craft:server:checkNeedfoCraft', data.currentCraft, need, data.time, data.amount)
+end)
+
+
+
+RegisterNetEvent('craft:startcraft')
+AddEventHandler('craft:startcraft', function(currentCraft, need,time, amount)
+    QBCore.Functions.Progressbar('craft', 'Крафтим...', time*1000, false, true, { -- Name | Label | Time | useWhileDead | canCancel
+        disableMovement = true,
+        disableCarMovement = true,
+        disableMouse = false,
+        disableCombat = true,
+    }, {
+        animDict = 'anim@gangops@facility@servers@',
+        anim = 'hotwire',
+        flags = 47, --16
+    }, {}, {}, function() -- Play When Done
+        --Stuff goes here
+        TriggerServerEvent('craft:server:done', currentCraft, need, amount)
+    end, function() -- Play When Cancel
+        --Stuff goes here
+    end)
+    
+end) 
+
+RegisterNetEvent('craft:refresh')
+AddEventHandler('craft:refresh', function()
+    refreshCraft()
+end) 
 
 CreateThread(function()
     for index, value in pairs(Config.Locations) do
@@ -157,40 +243,49 @@ CreateThread(function()
         for index, value in pairs(Config.Locations) do
             local pos = GetEntityCoords(PlayerPedId())
             local dist = #(pos - value.coords)
+           
             if dist <= value.radius then
+                sleep = 1
+               
+                --print('dist', dist, index)
                 local canOpen = false
                 if #value.jobs > 0 then
-                    for index, value in pairs(value.jobs) do
-                        if value == PlayerData.job.name then
+                    for i, v in pairs(value.jobs) do
+                        if v == PlayerData.job.name then
                             canOpen = true
                             break
                         end
                     end
                 end
                 if #value.gangs > 0 then
-                    for index, value in pairs(value.gangs) do
-                        if value == PlayerData.gang.name then
+                    for i, v in pairs(value.gangs) do
+                        if v == PlayerData.gang.name then
                             canOpen = true
                             break
                         end
                     end
                 end
                
-                sleep = 0
-                if not inUSe then exports['qb-core']:DrawText('[E] - открыть меню крафта', 'bottom') end
+                
+                
+                --if not inUSe then exports['qb-core']:DrawText('[E] - открыть меню крафта', 'bottom') end
+                    if not isNotif then
+                        showNotif('[E] - открыть меню крафта', GetEntityCoords(PlayerPedId()), 1.5)
+                    end
                     if IsControlJustReleased(0, Keys["E"]) then
                         if canOpen or (#value.gangs==0 and #value.jobs == 0) then 
                             inUSe = true
                             exports['qb-core']:HideText()
-                            openCraft(value)
+                            currentTable = value
+                            openCraft(currentTable)
                             Wait(1000)
                         else
                             QBCore.Functions.Notify('Вам недоступен данный стол', 'error', 7500)
                         end
                     end 
-                
+                break
             else
-                exports['qb-core']:HideText()
+                --exports['qb-core']:HideText()
                 inUSe = false
             end
         end 

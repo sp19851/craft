@@ -1,7 +1,7 @@
 fx_version 'cerulean'
 game 'gta5'
 
-description 'Craft Sysytem for QBCore by @Cruso#5044'
+description 'Craft System for QBCore by @Cruso#5044'
 version '0.0.1'
 
 shared_scripts {
